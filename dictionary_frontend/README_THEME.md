@@ -18,5 +18,6 @@
 
 ## Healthcheck
 
-- The container exposes a fast health endpoint at `/` that returns `{ status: "ok", ready: true }` during dev/SSR to satisfy platform health checks.
+- The container exposes a fast health endpoint at `/health` that returns `{ status: "ok", ready: true }` to satisfy platform health checks.
+- The root path `/` serves the Nuxt application (home page).
 - The dev server binds to `0.0.0.0` on port `3000` by default. Override via `NUXT_PUBLIC_PORT`, `PORT`, or `NITRO_PORT`.
