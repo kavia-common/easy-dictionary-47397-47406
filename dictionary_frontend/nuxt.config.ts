@@ -1,7 +1,7 @@
 /* https://nuxt.com/docs/api/configuration/nuxt-config
  * Nuxt configuration for the Ocean Dictionary frontend.
  * - Exposes NUXT_PUBLIC_API_BASE as runtime public config for composables.
- * - Sets dev server to 0.0.0.0:3000 to work in container.
+ * - Ensures dev server binds to 0.0.0.0:3000 (or env PORT/NITRO_PORT) to work in containerized CI.
  */
 export default defineNuxtConfig({
   compatibilityDate: "2024-11-01",
@@ -25,6 +25,9 @@ export default defineNuxtConfig({
     },
   },
   nitro: {
+    // Respect container port envs; default to 3000 when not provided.
+    devProxy: {},
+    preset: process.env.NITRO_PRESET || undefined,
     routeRules: {
       "/**": {
         headers: {
@@ -33,11 +36,18 @@ export default defineNuxtConfig({
       },
     },
   },
+  // Ensure Vite and Nuxt dev server bind correctly inside containers.
   vite: {
     server: {
       host: '0.0.0.0',
       allowedHosts: true,
-      port: 3000,
+      port: Number(process.env.NUXT_PUBLIC_PORT || process.env.PORT || process.env.NITRO_PORT || 3000),
+      strictPort: true, // avoid auto-switching to a different port
     },
+  },
+  // Also guide Nuxt dev server to use the same port/host.
+  devServer: {
+    host: '0.0.0.0',
+    port: Number(process.env.NUXT_PUBLIC_PORT || process.env.PORT || process.env.NITRO_PORT || 3000),
   },
 });
