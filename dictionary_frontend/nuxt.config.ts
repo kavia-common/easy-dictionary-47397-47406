@@ -9,6 +9,8 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       apiBase: process.env.NUXT_PUBLIC_API_BASE || '',
+      // Mirror port for client-side needs if required by env
+      port: process.env.NUXT_PUBLIC_PORT || process.env.PORT || process.env.NITRO_PORT || '3000',
     },
   },
   app: {
@@ -25,9 +27,17 @@ export default defineNuxtConfig({
     },
   },
   nitro: {
-    // Respect container port envs; default to 3000 when not provided.
-    devProxy: {},
+    // Disable devProxy to avoid startup overhead in CI and potential hanging
+    devProxy: false as unknown as undefined,
+    // Respect preset if provided externally
     preset: process.env.NITRO_PRESET || undefined,
+    // Explicitly bind Nitro to host/port in dev
+    devServer: {
+      host: '0.0.0.0',
+      port: Number(process.env.NUXT_PUBLIC_PORT || process.env.NITRO_PORT || process.env.PORT || 3000),
+      // Do not auto-increment port; fail fast if occupied
+      https: false,
+    },
     routeRules: {
       "/**": {
         headers: {
@@ -36,7 +46,7 @@ export default defineNuxtConfig({
       },
     },
   },
-  // Ensure Vite and Nuxt dev server bind correctly inside containers.
+  // Ensure Vite dev server binds correctly inside containers.
   vite: {
     server: {
       host: '0.0.0.0',
