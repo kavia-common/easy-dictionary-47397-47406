@@ -5,7 +5,8 @@
  */
 export default defineNuxtConfig({
   compatibilityDate: "2024-11-01",
-  devtools: { enabled: true },
+  // Disable Nuxt devtools to reduce startup overhead in CI/containers
+  devtools: { enabled: false },
   runtimeConfig: {
     public: {
       apiBase: process.env.NUXT_PUBLIC_API_BASE || '',
@@ -32,7 +33,7 @@ export default defineNuxtConfig({
   nitro: {
     // Avoid extra dev proxy features
     devProxy: false as unknown as undefined,
-    // Respect preset if provided externally (e.g., node)
+    // Force node preset by default for predictable container startup
     preset: process.env.NITRO_PRESET || 'node',
     // Explicitly bind Nitro to host/port in dev and fail fast on conflicts
     devServer: {
@@ -65,6 +66,13 @@ export default defineNuxtConfig({
       'process.env.NUXT_TELEMETRY_DISABLED': JSON.stringify('1'),
       'process.env.NUXT_TYPE_CHECK': JSON.stringify('0'),
     },
+    // Avoid generating source maps in dev unless explicitly enabled
+    build: {
+      sourcemap: process.env.NUXT_PUBLIC_ENABLE_SOURCE_MAPS === '1',
+    },
+    css: {
+      devSourcemap: false,
+    },
   },
   // Also guide Nuxt dev server to use the same port/host.
   devServer: {
@@ -78,5 +86,10 @@ export default defineNuxtConfig({
     // PUBLIC_INTERFACE
     /** Disable type checking on build/start to speed up dev boot; CI can run tsc separately if needed. */
     typeCheck: false,
+  },
+  // Avoid heavy build analysis and source maps in dev by default
+  build: {
+    analyze: false,
+    sourcemap: process.env.NUXT_PUBLIC_ENABLE_SOURCE_MAPS === '1',
   },
 });
