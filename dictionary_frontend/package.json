@@ -4,10 +4,9 @@
   "type": "module",
   "scripts": {
     "build": "nuxt build",
-    "dev": "nuxt dev --host 0.0.0.0 --port ${NUXT_PUBLIC_PORT:-${PORT:-${NITRO_PORT:-3000}}} --no-open",
+    "dev": "NUXT_TELEMETRY_DISABLED=1 NUXT_TYPE_CHECK=0 nuxt dev --host 0.0.0.0 --port ${NUXT_PUBLIC_PORT:-${PORT:-${NITRO_PORT:-3000}}} --no-open",
     "generate": "nuxt generate",
-    "preview": "nuxt preview --port ${NUXT_PUBLIC_PORT:-${PORT:-${NITRO_PORT:-3000}}}",
-    "postinstall": "nuxt prepare",
+    "preview": "NUXT_TELEMETRY_DISABLED=1 nuxt preview --port ${NUXT_PUBLIC_PORT:-${PORT:-${NITRO_PORT:-3000}}}",
     "lint": "eslint ."
   },
   "dependencies": {

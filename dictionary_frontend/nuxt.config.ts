@@ -11,6 +11,8 @@ export default defineNuxtConfig({
       apiBase: process.env.NUXT_PUBLIC_API_BASE || '',
       // Mirror port for client-side needs if required by env
       port: process.env.NUXT_PUBLIC_PORT || process.env.PORT || process.env.NITRO_PORT || '3000',
+      // Healthcheck path exposed for container platforms
+      healthcheckPath: process.env.NUXT_PUBLIC_HEALTHCHECK_PATH || '/',
     },
   },
   app: {
@@ -26,16 +28,16 @@ export default defineNuxtConfig({
       ],
     },
   },
+  // Nitro runtime and server binding
   nitro: {
-    // Disable devProxy to avoid startup overhead in CI and potential hanging
+    // Avoid extra dev proxy features
     devProxy: false as unknown as undefined,
-    // Respect preset if provided externally
-    preset: process.env.NITRO_PRESET || undefined,
-    // Explicitly bind Nitro to host/port in dev
+    // Respect preset if provided externally (e.g., node)
+    preset: process.env.NITRO_PRESET || 'node',
+    // Explicitly bind Nitro to host/port in dev and fail fast on conflicts
     devServer: {
       host: '0.0.0.0',
       port: Number(process.env.NUXT_PUBLIC_PORT || process.env.NITRO_PORT || process.env.PORT || 3000),
-      // Do not auto-increment port; fail fast if occupied
       https: false,
     },
     routeRules: {
@@ -45,19 +47,36 @@ export default defineNuxtConfig({
         },
       },
     },
+    // Disable timing/telemetry-like overhead in nitro if present
+    experimental: {
+      tasks: false,
+    } as any,
   },
-  // Ensure Vite dev server binds correctly inside containers.
+  // Ensure Vite dev server binds correctly inside containers and doesn't switch ports
   vite: {
     server: {
       host: '0.0.0.0',
       allowedHosts: true,
       port: Number(process.env.NUXT_PUBLIC_PORT || process.env.PORT || process.env.NITRO_PORT || 3000),
-      strictPort: true, // avoid auto-switching to a different port
+      strictPort: true,
+    },
+    // Speed up startup by skipping TS type checking on start and disabling telemetry
+    define: {
+      'process.env.NUXT_TELEMETRY_DISABLED': JSON.stringify('1'),
+      'process.env.NUXT_TYPE_CHECK': JSON.stringify('0'),
     },
   },
   // Also guide Nuxt dev server to use the same port/host.
   devServer: {
     host: '0.0.0.0',
     port: Number(process.env.NUXT_PUBLIC_PORT || process.env.PORT || process.env.NITRO_PORT || 3000),
+  },
+  // Disable Nuxt telemetry entirely
+  telemetry: false,
+  // Disable type checking during dev start for faster boot (can still run separately)
+  typescript: {
+    // PUBLIC_INTERFACE
+    /** Disable type checking on build/start to speed up dev boot; CI can run tsc separately if needed. */
+    typeCheck: false,
   },
 });
